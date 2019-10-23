@@ -1,0 +1,107 @@
+Introduccion a python
+- Tipos de lenguajes
+- ¿Que es python, Django y DRF?
+- Instalacion de python y pycharm (opcional)
+- Sintaxis python y declaraciones
+- Expresiones y operadores logicos
+- estructuras de control
+- nociones de POO
+
+
+
+Django - Setting y Entorno
+- uso de pip y consola de comandos
+- creacion de projectos y apps django
+- configuracion de settings.py
+- conexion a base de datos
+
+
+Django - Models
+- como definir un modelo
+- tipos de datos
+- metodos
+- crear y personalizar metodos
+
+
+
+Django - Views
+- que es una vista
+- peticiones a database
+    * All
+    * Filter
+    * Get
+    * __gt, __gte, __lt, __lte, Q()
+    * exlude()
+    * order_by()
+    * annonate()
+    * aggregate()
+- retorno de views metodos
+
+
+Django - Forms
+- que es un form o formulario django
+- clase forms.ModelForm
+- Clases y pattern en Form
+- Creacion y actualizacion de registros en db
+- delete()
+
+
+Introduccion a API y GitHub
+- que es Git y Github
+- crear proyecto Github
+- commits y push
+- ¿Que es una API?
+- como se prueba una API
+- Request y Response
+- methodos HTTP, tipos y codigos HTTP
+- Ejemplos de API
+
+
+Introduccion a json y estructuras de datos
+- ¿Que es un json y sus tipos?
+- tipos de datos
+- como estructurar un json
+- porque usar un json
+- ejemplos y practicas con archivos json
+- creacion de projecto con DRF y agregandolo a GitHub
+- instalacion de DRF y DCH
+
+Django Rest Framework
+- que es y para que sirve
+- decoradores
+- como implementarlo
+- request y response
+- metodos y solicitudes
+- desuso de Foms
+- ¿que hace falta?
+
+DRF - Serializers
+- Que es un serializer
+- creacion de un serializers
+- GET serializer
+- POST, PUT y DELETE con DRF
+- return Errors and Response
+
+
+Optimizacion de codigo
+- funciones recursivas
+- errores personalizados
+- reutilizacion de variables
+- tecnicas de produccion de codigo
+
+
+--- Deploy ---
+- Que es DigitaOcean
+- que es un dominio
+- uso de consola Linux
+- subir tu repositorio Git a DO
+- correr tu aplicacion django
+- certificado SSL para https
+- asociar dominio a DO
+- introduccion a la seguridad
+
+
+---- SEGURIDAD SERVIDOR ----
+- SSH y Claves de acceso
+- Nginx + Gunicorn
+- Conclusiones
