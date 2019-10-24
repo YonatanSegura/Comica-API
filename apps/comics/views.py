@@ -38,7 +38,7 @@ def last_comics(ind):
 
 
 def all_comics():
-    comics = Comic.objects.all().exclude(state=0).order_by('-id')
+    comics = Comic.objects.all().exclude(state=0).order_by('-created_by')
     return BasicComicSerializer(comics, many=True)
 
 
@@ -55,141 +55,41 @@ def index(request):
             return Response(status_data.HTTP_400_BAD_REQUEST([200, str(err)]), status=status.HTTP_400_BAD_REQUEST)
 
 
-@api_view(['GET'])
+@api_view(['GET', 'POST'])
 def comic_list(request):
     if request.method == 'GET':
-        try:
-            last_comic = last_comics(6)
-            all_comic = all_comics()
-            data = {'comics': all_comic.data}
-
-            return Response(data, status=status.HTTP_200_OK)
-
-        except (KeyError, ValueError, TypeError) as err:
-            return Response(status_data.HTTP_400_BAD_REQUEST([200, str(err)]), status=status.HTTP_400_BAD_REQUEST)
-
-
-@api_view(['GET', 'POST', 'PUT', 'DELETE'])
-def view_comic(request, uid=None):
-    if request.method == 'GET':
-        try:
-            print(uid)
-            if uid is None:
-                return Response(status_data.HTTP_400_BAD_REQUEST([200, 'Not Found Param in URL']),
-                                status=status.HTTP_400_BAD_REQUEST)
-            else:
-                try:
-                    comic = Comic.objects.get(Q(uuid=uid) & Q(state__gte=1))
-                    print(comic.rewards)
-                    comics = get_comic(comic, False).data
-
-                    return Response(comics, status=status.HTTP_200_OK)
-                except:
-                    return Response(status_data.HTTP_404_NOT_FOUND([100, uid]),
-                                    status=status.HTTP_404_NOT_FOUND)
-
-        except (KeyError, ValueError, TypeError) as err:
-            return Response(status_data.HTTP_400_BAD_REQUEST([200, str(err)]), status=status.HTTP_400_BAD_REQUEST)
+        comics = Comic.objects.all().exclude(state=0).order_by('-id')
+        serializer = BasicComicSerializer(comics, many=True)
+        array_comics = {"comics": serializer.data}
+        return Response(array_comics)
 
     elif request.method == 'POST':
-        try:
-            data = request.data
-            if 'comics_url' in data.keys():
-                serializer = CreateComicSerializer(data=data)
-                if serializer.is_valid():
-                    serializer = serializer.save()
-                    for urls in data['comics_url']:
-                        urls['comic'] = serializer.id
-                        urls['uuid'] = str(uuid.uuid4())
-                        print(urls)
-                        serializer2 = CreateComicsUrlSerializer(data=urls)
-                        if serializer2.is_valid():
-                            serializer2.save()
-                        else:
-                            return Response(status_data.HTTP_400_BAD_REQUEST([200, str(serializer2.errors)]),
-                                            status=status.HTTP_400_BAD_REQUEST)
-                    all = Comic.objects.get(pk=serializer.pk)
-                    all = ComicSerializer(all, many=False)
-                    return Response(all.data, status=status.HTTP_200_OK)
-                else:
-                    return Response(status_data.HTTP_400_BAD_REQUEST([200, str(serializer.errors)]),
-                                    status=status.HTTP_400_BAD_REQUEST)
-            else:
-                return Response(
-                    status_data.HTTP_400_BAD_REQUEST(
-                        [200, "an array of 'comics_url' was expected in the request data"]),
-                    status=status.HTTP_400_BAD_REQUEST)
+        serializer = CreateComicSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        except (KeyError, ValueError, TypeError) as err:
-            return Response(status_data.HTTP_400_BAD_REQUEST([200, str(err)]), status=status.HTTP_400_BAD_REQUEST)
-        except Exception as err:
-            print('paso aqui')
-            return Response(status_data.HTTP_400_BAD_REQUEST([200, str(err)]), status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['GET', 'PUT', 'DELETE'])
+def view_comic(request, uid):
+    try:
+        comic = Comic.objects.get(Q(uuid=uid) & Q(state__gte=1))
+    except Comic.DoesNotExist:
+        errors = {"error": "404 no se encuentra ese registro"}
+        return Response(errors, status=status.HTTP_404_NOT_FOUND)
+
+    if request.method == 'GET':
+        serializer = ComicSerializer(comic)
+        return Response(serializer.data)
 
     elif request.method == 'PUT':
-        try:
-            data = request.data
-            if uid is None:
-                return Response(status_data.HTTP_400_BAD_REQUEST([200, 'Not Found Param in URL']),
-                                status=status.HTTP_400_BAD_REQUEST)
-            comic = Comic.objects.get(Q(uuid=uid) & Q(state__gte=1))
-        except (KeyError, ValueError, TypeError) as err:
-            return Response(status_data.HTTP_400_BAD_REQUEST([200, str(err)]), status=status.HTTP_400_BAD_REQUEST)
-
-        try:
-            serializer = CreateComicSerializer(comic, data=data, partial=True)
-            if serializer.is_valid():
-                serializer = serializer.save()
-                if 'comics_url' in data.keys():
-                    for urls in data['comics_url']:
-                        print(urls)
-                        comic_url = ComicsUrl.objects.get(Q(uuid=urls['uuid']) & Q(state__gte=1))
-                        serializer2 = CreateComicsUrlSerializer(comic_url, data=urls, partial=True)
-                        if serializer2.is_valid():
-                            serializer2.save()
-                        else:
-                            return Response(status_data.HTTP_400_BAD_REQUEST([200, serializer2.errors]),
-                                            status=status.HTTP_400_BAD_REQUEST)
-                all = Comic.objects.get(pk=serializer.pk)
-                all = ComicSerializer(all, many=False)
-                return Response(all.data, status=status.HTTP_200_OK)
-            else:
-                if 'comics_url' in data.keys():
-                    for urls in data['comics_url']:
-                        print(urls)
-                        comic_url = ComicsUrl.objects.get(Q(uuid=urls['uuid']) & Q(state__gte=1))
-                        serializer2 = CreateComicsUrlSerializer(comic_url, data=urls, partial=True)
-                        if serializer2.is_valid():
-                            serializer2.save()
-                        else:
-                            return Response(status_data.HTTP_400_BAD_REQUEST([200, serializer2.errors]),
-                                            status=status.HTTP_400_BAD_REQUEST)
-                    all = Comic.objects.get(pk=comic.pk)
-                    all = ComicSerializer(all, many=False)
-                    return Response(all.data, status=status.HTTP_200_OK)
-
-                return Response(status_data.HTTP_400_BAD_REQUEST([200, serializer.errors]),
-                                status=status.HTTP_400_BAD_REQUEST)
-
-        except (KeyError, ValueError, TypeError) as err:
-            return Response(status_data.HTTP_400_BAD_REQUEST([200, str(err)]), status=status.HTTP_400_BAD_REQUEST)
-        except:
-            return Response(status_data.HTTP_400_BAD_REQUEST([100]), status=status.HTTP_400_BAD_REQUEST)
+        serializer = CreateComicSerializer(comic, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     if request.method == 'DELETE':
-        try:
-            print(uid)
-            if uid is None:
-                return Response(status_data.HTTP_400_BAD_REQUEST([200, 'Not Found Param in URL']),
-                                status=status.HTTP_400_BAD_REQUEST)
-            else:
-                try:
-                    comic = Comic.objects.get(uuid=uid)
-                    comic.delete()
-                    return Response(status=status.HTTP_200_OK)
-                except:
-                    return Response(status_data.HTTP_404_NOT_FOUND([100, uid]),
-                                    status=status.HTTP_404_NOT_FOUND)
-
-        except (KeyError, ValueError, TypeError) as err:
-            return Response(status_data.HTTP_400_BAD_REQUEST([200, str(err)]), status=status.HTTP_400_BAD_REQUEST)
+        comic.delete()
+        return Response(status=status.HTTP_200_OK)
